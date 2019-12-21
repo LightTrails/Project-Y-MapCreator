@@ -7,7 +7,9 @@ class Level():
     def __init__(self, sLevel):
         dimension = sLevel['Dimensions']
         self.dimension = (int(dimension['x']), int(dimension['y']))
-        self.tiles = {}
+        self.tiles = { }
+
+        self.constraints = { 'MaxMoves': sLevel['Constraints']['MaxMoves'] }
 
         self.turns = []
 
@@ -24,6 +26,38 @@ class Level():
                                                  [ self.tiles[(i, j+1+k)] for k in range(self.dimension[1]-1-j) ], 
                                                  [ self.tiles[(i, j-1-k)] for k in range(j) ] )
 
+    def resize(self, newDimensions):
+        oldDimension = self.dimension
+
+        if( oldDimension[0] < newDimensions[0] ):
+            for i in range(newDimensions[0] - oldDimension[0]):
+                for j in range(newDimensions[1]):
+                    newTile = Tile({'Coordinate': {'x': i + oldDimension[0], 'y': j}, 'State': 1})
+                    self.tiles[newTile.coordinate] = newTile
+
+        if( oldDimension[0] > newDimensions[0] ):
+            for i in range(oldDimension[0] - newDimensions[0]):
+                for j in range(oldDimension[1]):
+                    del self.tiles[(oldDimension[0] - i - 1 ,j)]
+
+        if( oldDimension[1] < newDimensions[1] ):
+            for i in range(newDimensions[0]):
+                for j in range(newDimensions[1] - oldDimension[1]):
+                    newTile = Tile({'Coordinate': {'x': i, 'y': j+ oldDimension[1]}, 'State': 1})
+                    self.tiles[newTile.coordinate] = newTile
+ 
+        if( oldDimension[1] < newDimensions[1] ):
+            for i in range(oldDimension[0]):
+                for j in range(oldDimension[1] - newDimensions[1]):
+                    del self.tiles[(i ,oldDimension[1]-j-1)]
+
+        self.dimension = newDimensions
+
+
+    def reset(self):
+        for tile in self.tiles:
+            ctile = self.tiles[tile]
+            ctile.state = ctile.endState
 
     def pickAndReverseNumberOfActions(self, numberOfActions):   
         for _ in range(numberOfActions):
@@ -97,11 +131,11 @@ class Level():
     def addTurn(self, coordinate, direction):
         self.turns.append({ 'coordinate': coordinate, 'direction': direction })
 
-    def toLevel(self, constraints):    
+    def toLevel(self):    
         return {
                 'Dimensions': { 'x': self.dimension[0], 'y': self.dimension[1] },
                 'Tiles': [ self.tiles[tileCoordinates].saveState() for tileCoordinates in self.tiles ],
-                'Constraints': constraints
+                'Constraints': { 'MaxMoves': self.constraints['MaxMoves'] }
                }
 
 
@@ -120,9 +154,8 @@ class Tile():
         self.right = right
 
     def saveState(self):
-
-        if(self.state == 0):
-            self.state = random.randint(1,2)
+        #if(self.state == 0):
+        #    self.state = random.randint(1,2)
 
         return { 'State': self.state, 'EndState': self.endState, 'Coordinate': {'x': self.coordinate[0], 'y': self.coordinate[1] } }
         

@@ -2,7 +2,7 @@ import json
 from level import Level
 import displayImage
 
-levelDictionary = json.load(open("c:\\Debug\\Level1.json", "r"))
+levelDictionary = json.load(open("c:\\Debug\\Level2.json", "r"))
 
 results = []
 
@@ -19,4 +19,4 @@ best = results[0]
 
 levelDirectory = best[1].toLevel( { 'MaxMoves': numberOfMoves } )
 
-json.dump(levelDirectory, open("c:\\Debug\\Level1.json", "w"))
+json.dump(levelDirectory, open("c:\\Debug\\Level2.json", "w"))
