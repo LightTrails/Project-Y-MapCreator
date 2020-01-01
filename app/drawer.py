@@ -22,14 +22,14 @@ class Drawer(BoxLayout):
 
             if(int(yslider.value) != instance.yy):
                 yslider.value = instance.yy
-            
+
         def OnSliderValueChange(instance, value):
             dw = int(xslider.value)
             dl = int(yslider.value)
 
             xti.text = str(dw)
             yti.text = str(dl)
-            
+
             if( int(map.xx) != dw or int(map.yy) != dl ):
                 map.level.resize((dw, dl))
                 map.reloadLevel()
@@ -49,8 +49,12 @@ class Drawer(BoxLayout):
         y.add_widget(yslider)
 
 
-        sliders = BoxLayout(orientation="vertical") 
+        sliders = BoxLayout(orientation="vertical")
         sliders.add_widget(x)
         sliders.add_widget(y)
         self.add_widget(sliders)
+        self.sideMenu = sideMenu
         #self.add_widget(colorButton)
+
+    def openSideMenu(self):
+        self.sideMenu.open()

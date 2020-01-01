@@ -8,7 +8,7 @@ from level import Level
 class Solver(BoxLayout):
     def __init__(self, map, sideMenu, **kwargs):
         super().__init__(**kwargs)
-        
+
         self.map = map
 
         def on_checkbox_active(checkbox, value):
@@ -45,7 +45,7 @@ class Solver(BoxLayout):
 
         reset_button = Button(text="Reset")
         reset_button.bind(on_press=reset)
-        
+
         slider = Slider(min=1, max=10, value=1)
         self.slider = slider
 
@@ -66,13 +66,14 @@ class Solver(BoxLayout):
         moves_box = BoxLayout(orientation="vertical")
         moves_box.add_widget(moves_button)
         moves_box.add_widget(moves_slider)
-        
+
         self.add_widget(reset_button)
         self.add_widget(moves_box)
         self.add_widget(checkbox)
+        self.sideMenu = sideMenu
+
+    def openSideMenu(self):
+        self.clearItems()
+        self.sideMenu.open()
 
 
-        
-        
-
-        

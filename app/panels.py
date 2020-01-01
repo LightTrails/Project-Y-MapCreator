@@ -9,7 +9,7 @@ from app.solver import Solver
 from app.drawer import Drawer
 
 class Panels(BoxLayout):
-    
+
     def __init__(self, layout, map, sideMenu, **kwargs):
         super().__init__(**kwargs)
 
@@ -19,7 +19,7 @@ class Panels(BoxLayout):
         self.solver = Solver(map, sideMenu)
 
         self.map = map
-        
+
         self.btn1 = ToggleButton(text='Levels', group='panels', state='down')
         self.btn2 = ToggleButton(text='Draw Map', group='panels')
         self.btn3 = ToggleButton(text='Solver', group='panels')
@@ -40,10 +40,12 @@ class Panels(BoxLayout):
 
                 if(instance == self.btn2):
                     layout.add_widget(self.drawer)
-                    
+                    self.drawer.openSideMenu()
 
                 if(instance == self.btn3):
                     layout.add_widget(self.solver)
+                    self.solver.openSideMenu()
+
 
         self.btn1.bind(state=OnStateChange)
         self.btn2.bind(state=OnStateChange)
@@ -79,7 +81,7 @@ class Panels(BoxLayout):
             return
         if keycode[1] == '3':
             self.map.setPaintTileState(2)
-            return            
+            return
         if keycode[1] == '4':
             self.map.setPaintTileState(3)
             return

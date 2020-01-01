@@ -6,8 +6,8 @@ from kivy.core.window import Window
 class SideMenu(BoxLayout):
     def __init__(self, map, **kwargs):
         super().__init__(**kwargs)
-        self.width = 0        
-        self.scrollView = ScrollView(do_scroll_y=True)              
+        self.width = 0
+        self.scrollView = ScrollView(do_scroll_y=True)
         self.scrollView.clear_widgets()
         self.sideMenuItems = []
 
@@ -22,7 +22,7 @@ class SideMenu(BoxLayout):
         self.width = 0
 
     def open(self):
-        self.width = 200        
+        self.width = 200
 
     def resetColors(self):
         for sideMenuItem in self.sideMenuItems:
@@ -39,5 +39,5 @@ class SideMenu(BoxLayout):
 
     def clearAndAddSideMenuItems(self, sideMenuItems):
         self.clearItems()
-        for sideMenu in sideMenuItems:            
+        for sideMenu in sideMenuItems:
             self.addSideMenuItem(sideMenu)
