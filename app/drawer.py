@@ -5,11 +5,13 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.colorpicker import ColorPicker
 from kivy.uix.popup import Popup
 from kivy.uix.label import Label
+from app.sideMenuItem import SideMenuItem
+from app.drawStates import drawStates
 
 class Drawer(BoxLayout):
     def __init__(self, map, sideMenu, **kwargs):
         super().__init__(**kwargs)
-
+        self.sideMenuItems = []
         xti = TextInput(text=str(map.xx),size_hint=(0.2, 1))
         yti = TextInput(text=str(map.yy),size_hint=(0.2, 1))
 
@@ -52,9 +54,43 @@ class Drawer(BoxLayout):
         sliders = BoxLayout(orientation="vertical")
         sliders.add_widget(x)
         sliders.add_widget(y)
+
+        self.map = map
         self.add_widget(sliders)
         self.sideMenu = sideMenu
+        self.createSideMenuItems()
         #self.add_widget(colorButton)
 
     def openSideMenu(self):
+        self.setSideMenus()
         self.sideMenu.open()
+
+    def setDrawer(self, drawState):
+        self.selectedDrawState = drawState
+        self.map.setPaintTileState(drawState)
+
+    def setSideMenus(self):
+        self.sideMenu.clearItems();
+        for sideMenuItem in self.sideMenuItems:            
+            self.sideMenu.addSideMenuItem(sideMenuItem)
+        
+
+    def createSideMenuItems(self):
+        self.sideMenuItems.clear()
+
+        self.drawStates = drawStates
+
+        for drawState in self.drawStates:
+            sideMenuItem = SideMenuItem(drawState, lambda drawState: self.setDrawer(drawState))
+            
+            if(drawState.color != None):
+                sideMenuItem.setSideColor(drawState.color)
+            
+            if(drawState.wallColor != None):
+                sideMenuItem.setSideColor(drawState.wallColor)
+
+            sideMenuItem.setText(drawState.text)
+            self.sideMenuItems.append(sideMenuItem)
+        
+
+

@@ -24,9 +24,31 @@ class SideMenu(BoxLayout):
     def open(self):
         self.width = 200
 
+    def up(self):
+        for i in range(len(self.sideMenuItems)):
+            if(self.sideMenuItems[i].selected and i > 0):
+                self.selectByIndex(i-1)
+                break
+
+    def down(self):
+        for i in range(len(self.sideMenuItems)):
+            if(self.sideMenuItems[i].selected and i < len(self.sideMenuItems)):
+                self.selectByIndex(i+1)
+                break
+
+
     def resetColors(self):
         for sideMenuItem in self.sideMenuItems:
             sideMenuItem.resetColor()
+
+    def selectByIndex(self, index):        
+        if(len(self.sideMenuItems) > index):
+            self.sideMenuItems[index].selectWithCallback()
+
+    def select(self, state):
+        for sideMenuItem in self.sideMenuItems:
+            if( sideMenuItem.contentState == state):
+                sideMenuItem.select()
 
     def clearItems(self):
         self.boxView.clear_widgets()

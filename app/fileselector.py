@@ -7,7 +7,7 @@ import glob, os
 from app.sideMenuItem import SideMenuItem
 from level import Level
 
-path = 'C:\\git\\Project-Y-MapCreator\\files'
+path = 'C:\\git\\ProjectY-MapCreator\\files'
 
 class FileSelector(BoxLayout):
     def __init__(self, map, sideMenu,**kwargs):
@@ -16,8 +16,10 @@ class FileSelector(BoxLayout):
         self.sideMenu = sideMenu
         self.orientation = "vertical"
         self.map = map
+        self.sideMenuItems = []
+        self.selectedSideMenu = None
 
-        self.currentLevelNumber = -1
+        self.currentLevelNumber = - 1
 
         self.optionView = BoxLayout(orientation="vertical", size_hint_y=None)
         self.optionView.bind(minimum_height=self.optionView.setter('height'))
@@ -36,11 +38,11 @@ class FileSelector(BoxLayout):
         boxLayout.add_widget(save_button)
 
         self.add_widget(boxLayout)
-
         self.set_based_on_levels()
         self.openSideMenu()
 
-    def openSideMenu(self):
+    def openSideMenu(self):        
+        self.setSideMenus()
         self.sideMenu.open()
 
     def save_new_level(self, instance):
@@ -48,6 +50,8 @@ class FileSelector(BoxLayout):
         level = self.get_level_name_by_number(self.nextMaxLevel)
         json.dump(levelDirectory, open(path + '\\'+ level +".json", "w"))
         self.set_based_on_levels()
+        self.selectedSideMenuItem = self.sideMenuItems[-1]
+        self.openSideMenu()        
 
     def save_current_level(self, instance):
         if(self.currentFilePath):
@@ -66,9 +70,6 @@ class FileSelector(BoxLayout):
         if(previous > 0 and previous < self.nextMaxLevel):
             self.load_level_by_number(previous)
 
-    def load_level(self, instance, option):
-        self.load_level_by_name(option)
-
     def load_level_by_name(self, name):
         self.currentFilePath = path + "\\"+name+".json"
         self.currentLevelNumber = int(name.replace('Level', ''))
@@ -85,8 +86,13 @@ class FileSelector(BoxLayout):
     def get_level_name_by_number(self, number):
         return 'Level{:03d}'.format(number)
 
-    def set_based_on_levels(self):
+    def setSideMenus(self):
         self.sideMenu.clearItems()
+        for sideMenuItem in self.sideMenuItems:
+            self.sideMenu.addSideMenuItem(sideMenuItem)
+
+    def set_based_on_levels(self):
+        self.sideMenuItems.clear()
         self.nextMaxLevel = 1
         last = ''
 
@@ -94,7 +100,10 @@ class FileSelector(BoxLayout):
             if file.endswith(".json"):
                 name = file.replace('.json', '')
                 last = name
-                sideMenuItem = SideMenuItem(name, lambda sideMenuItem: self.load_level_by_name(sideMenuItem.text))
-                self.sideMenu.addSideMenuItem(sideMenuItem)
+                sideMenuItem = SideMenuItem(name, lambda sideMenuItem: self.load_level_by_name(sideMenuItem))
+                sideMenuItem.setText(name)
+                self.sideMenuItems.append(sideMenuItem)        
 
         self.nextMaxLevel = int(last.replace('Level', '')) + 1
+
+        self.setSideMenus()        

@@ -11,17 +11,58 @@ from kivy.core.window import Window
 import operator
 import json
 from level import Level
+from app.drawStates import drawStates
 
 class Tile:
     def __init__(self, i, j, x, y, w, l):
         self.coord = (i,j)
         self.pos = (x, y)
         self.dim = (w, l)
-        self.setStates(1, 1)                
+        self.downWallColor = None
+        self.rightWallColor = None
+        self.downWallState = None
+        self.rightWallState = None
+        self.setFromDrawStates(drawStates[0])
 
-    def setStates(self, state, endState):
-        self.setState(state)
-        self.setEndState(endState)
+    def setFromDrawStates(self, drawState):        
+        self.downWallColor = None
+        self.rightWallColor = None
+        self.downWallState = None
+        self.rightWallState = None
+        
+        self.setState(drawState.state)
+        self.setEndState(drawState.state)
+
+        if(self.stateColor == None):
+            self.stateColor = [0,0,0,1]
+
+        if(drawState.rightWall):
+            self.setRightWall(drawState.wallState)
+        else:
+            self.setDownWall(drawState.wallState)
+
+    def setFromLevelTile(self, levelTile):
+        self.setState(levelTile.state)
+        self.setEndState(levelTile.endState)                
+        self.setRightWall(levelTile.rightWall)        
+        self.setDownWall(levelTile.downWall)
+
+    def setDownWall(self, wallState):
+        self.downWallState = wallState
+        self.downWallColor = self.getWallColor(wallState)        
+
+    def setRightWall(self, wallState):        
+        self.rightWallState = wallState
+        self.rightWallColor = self.getWallColor(wallState)
+
+    def toggleWallState(self, otherTile):
+        if(otherTile.downWallState != None):
+            self.downWallState = otherTile.downWallState if self.downWallState == None else None
+            self.downWallColor = otherTile.downWallColor
+
+        if(otherTile.rightWallState != None):
+            self.rightWallState = otherTile.rightWallState if self.rightWallState == None else None
+            self.rightWallColor = otherTile.rightWallColor
 
     def setState(self, state):
         self.state = state
@@ -32,18 +73,14 @@ class Tile:
         self.endStateColor = self.getColor(endState)
 
     def getColor(self, state):
-        if(state == 0):
-            return [0.15,0.15,0.15]
-        if(state == 1):
-            return [0.5,0.5,0.5]
-        if(state == 2):
-            return [1,0,0]
-        if(state == 3):
-            return [0,1,0]
-        if(state == 4):
-            return [0,0,1]
-        if(state == 5):
-            return [1,1,1]
+        for drawState in drawStates:
+            if(state == drawState.state):
+                return drawState.color
+
+    def getWallColor(self, wallState):
+        for drawState in drawStates:
+            if(wallState == drawState.wallState):
+                return drawState.wallColor
 
     def isClickOverState(self, parentWidget, pos):        
         newPos = tuple(map(operator.add, pos, (parentWidget.width / 4, 0)))
@@ -57,7 +94,6 @@ class Tile:
         return pos[0] >= self.pos[0] and pos[0] <= self.pos[0]+self.dim[0] and pos[1] >= self.pos[1] and pos[1] <= self.pos[1]+self.dim[1]
 
 class MapWidget(Widget):
-
     xx = NumericProperty(10.0)
     yy = NumericProperty(10.0)
 
@@ -66,14 +102,7 @@ class MapWidget(Widget):
         self.tiles = []
         
         self.paintTile = Tile(0,0,0,0, 20, 20)
-        self.paintTile.setStates(2,2)
-
-        self.paintOptions = []
-
-        for i in range(6):
-           paintExample = Tile(i, 0, i*25, 0, 20, 20)
-           paintExample.setStates(i, i)
-           self.paintOptions.append(paintExample)
+        self.paintTile.setFromDrawStates(drawStates[1])
 
         self.dimensions = (10, 10)
 
@@ -94,8 +123,8 @@ class MapWidget(Widget):
             for j in range(dimension[1]):
               sLevel['Tiles'].append({
                   'Coordinate': { 'x': i, 'y': j },
-                  'State': 1,
-                  'EndState': 1
+                  'State': 0,
+                  'EndState': 0
               })
         
         return Level(sLevel)
@@ -110,7 +139,7 @@ class MapWidget(Widget):
         for tile in self.tiles:
             if( tile.coord in level.tiles ):
                 levelTile = level.tiles[tile.coord]
-                tile.setStates(levelTile.state, levelTile.endState)
+                tile.setFromLevelTile(levelTile)
 
         self.draw()
 
@@ -134,25 +163,31 @@ class MapWidget(Widget):
         
         self.draw()
 
-    def setPaintTileState(self, state):
-        self.paintTile.setStates(state, state)
+    def setPaintTileState(self, drawState):
+        self.paintTile.setFromDrawStates(drawState)
         self.draw()
 
-    def draw(self, *largs):    
+    def draw(self, *largs):
         with self.canvas:
             self.canvas.clear()
             
             pos = tuple(map(operator.add, self.paintTile.pos, (self.width/2 , self.height - self.height/8)))
 
             Color(self.paintTile.stateColor[0], self.paintTile.stateColor[1], self.paintTile.stateColor[2], mode='rgb')            
-            Rectangle(pos=pos, size=self.paintTile.dim)
+            dim = self.paintTile.dim
+            Rectangle(pos=pos, size=dim)
 
-            ## Draw paint options
-            for tile in self.paintOptions:
-                Color(tile.stateColor[0], tile.stateColor[1], tile.stateColor[2], mode='rgb')
-                pos = tuple(map(operator.add, tile.pos, (10, 90)))
-                dim = tile.dim
-                Rectangle(pos=pos, size=dim)
+            if(self.paintTile.rightWallState != None):
+                Color(self.paintTile.rightWallColor[0], self.paintTile.rightWallColor[1], self.paintTile.rightWallColor[2], mode='rgb')
+                rightWallPos = (pos[0]+dim[0], pos[1])
+                rightWallDim = (5, dim[1])
+                Rectangle(pos=rightWallPos, size=rightWallDim)
+
+            if(self.paintTile.downWallState != None):
+                Color(self.paintTile.downWallColor[0], self.paintTile.downWallColor[1], self.paintTile.downWallColor[2], mode='rgb')
+                downWallPos = (pos[0], pos[1]-5)
+                downWallDim = (dim[0], 5)
+                Rectangle(pos=downWallPos, size=downWallDim)
 
             ## State 
             for tile in self.tiles:
@@ -160,6 +195,18 @@ class MapWidget(Widget):
                 pos = tuple(map(operator.add, tile.pos, ((self.width/2 + self.x)-self.width / 4, (self.height/2 + self.y))))
                 dim = tile.dim
                 Rectangle(pos=pos, size=dim)
+                
+                if(tile.rightWallState != None):
+                    Color(tile.rightWallColor[0], tile.rightWallColor[1], tile.rightWallColor[2], mode='rgb')
+                    rightWallPos = (pos[0]+dim[0], pos[1])
+                    rightWallDim = (5, dim[1])
+                    Rectangle(pos=rightWallPos, size=rightWallDim)
+                
+                if(tile.downWallState != None):
+                    Color(tile.downWallColor[0], tile.downWallColor[1], tile.downWallColor[2], mode='rgb')
+                    downWallPos = (pos[0], pos[1]-5)
+                    downWallDim = (dim[0], 5)
+                    Rectangle(pos=downWallPos, size=downWallDim)
 
             ## End state
             for tile in self.tiles:
@@ -167,27 +214,51 @@ class MapWidget(Widget):
                 pos = tuple(map(operator.add, tile.pos, ((self.width/2 + self.x)+self.width / 4, (self.height/2 + self.y))))
                 dim = tile.dim
                 Rectangle(pos=pos, size=dim)
+                
+                if(tile.rightWallState != None):
+                    Color(tile.rightWallColor[0], tile.rightWallColor[1], tile.rightWallColor[2], mode='rgb')
+                    rightWallPos = (pos[0]+dim[0], pos[1])
+                    rightWallDim = (5, dim[1])
+                    Rectangle(pos=rightWallPos, size=rightWallDim)
+                
+                if(tile.downWallState != None):
+                    Color(tile.downWallColor[0], tile.downWallColor[1], tile.downWallColor[2], mode='rgb')
+                    downWallPos = (pos[0], pos[1]-5)
+                    downWallDim = (dim[0], 5)
+                    Rectangle(pos=downWallPos, size=downWallDim)
             
     def on_touch_down(self, touch):
-        self.checkTouchAndDraw(touch)
+        self.checkTouchAndDraw(touch, True)
 
     def on_touch_move(self, touch):
-        self.checkTouchAndDraw(touch)
+        self.checkTouchAndDraw(touch, False)
 
-    def checkTouchAndDraw(self, touch):
+    def checkTouchAndDraw(self, touch, clickEvent):
+        if(self.level.readOnly):            
+            return
+
         newDraw = False
         relativeToCenter = tuple(map(operator.sub, (touch.x, touch.y), ((self.width/2 + self.x), (self.height/2 + self.y))))
         for tile in self.tiles:
             if(tile.isClickOverState(self, relativeToCenter)):
-                tile.setState(self.paintTile.state)
-                self.level.tiles[tile.coord].state = tile.state
+                if(self.paintTile.state != None):
+                    tile.setState(self.paintTile.state)
+                
+                if(clickEvent == True):
+                    tile.toggleWallState(self.paintTile)
+                
+                self.level.tiles[tile.coord].updateFromMapTile(tile)
                 newDraw = True
 
             if(tile.isClickOverEndState(self, relativeToCenter)):
-                tile.setEndState(self.paintTile.endState)
-                self.level.tiles[tile.coord].endState = tile.endState
+                if(self.paintTile.endState != None):
+                    tile.setEndState(self.paintTile.endState)
+
+                if(clickEvent == True):
+                    tile.toggleWallState(self.paintTile)
+                
+                self.level.tiles[tile.coord].updateFromMapTile(tile)
                 newDraw = True
         
         if(newDraw):
-            
             self.draw()

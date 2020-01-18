@@ -33,7 +33,9 @@ class Panels(BoxLayout):
         def OnStateChange(instance, value):
             if(value == 'down'):
                 layout.clear_widgets()
-                self.sideMenu.close();
+                self.sideMenu.close();                                
+                self.solver.deactivate()
+                
                 if(instance == self.btn1):
                     layout.add_widget(self.fileSelector)
                     self.fileSelector.openSideMenu()
@@ -44,7 +46,7 @@ class Panels(BoxLayout):
 
                 if(instance == self.btn3):
                     layout.add_widget(self.solver)
-                    self.solver.openSideMenu()
+                    self.solver.activate()
 
 
         self.btn1.bind(state=OnStateChange)
@@ -54,16 +56,7 @@ class Panels(BoxLayout):
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
 
-    def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
-        if( keycode[1] == '1' and 'ctrl' in modifiers):
-            self.fileSelector.load_level_by_number(1)
-            return
-        if( keycode[1] == 'numpadadd' and 'ctrl' in modifiers):
-            self.fileSelector.loadNextLevel()
-            return
-        if( keycode[1] == 'numpadsubstract' and 'ctrl' in modifiers):
-            self.fileSelector.loadPreviousLevel()
-            return
+    def _on_keyboard_down(self, keyboard, keycode, text, modifiers):        
         if( keycode[1] == '1' and 'shift' in modifiers):
             self.btn1._do_press()
             return
@@ -73,22 +66,42 @@ class Panels(BoxLayout):
         if( keycode[1] == '3' and 'shift' in modifiers):
             self.btn3._do_press()
             return
+        if( keycode[1] == 'w'):
+            self.sideMenu.up()
+            return
+        if( keycode[1] == 's'):
+            self.sideMenu.down()
+            return
         if keycode[1] == '1':
-            self.map.setPaintTileState(0)
+            self.sideMenu.selectByIndex(0)
             return
         if keycode[1] == '2':
-            self.map.setPaintTileState(1)
+            self.sideMenu.selectByIndex(1)
             return
         if keycode[1] == '3':
-            self.map.setPaintTileState(2)
+            self.sideMenu.selectByIndex(2)
             return
         if keycode[1] == '4':
-            self.map.setPaintTileState(3)
+            self.sideMenu.selectByIndex(3)
             return
         if keycode[1] == '5':
-            self.map.setPaintTileState(4)
+            self.sideMenu.selectByIndex(4)
             return
-
+        if keycode[1] == '6':
+            self.sideMenu.selectByIndex(5)
+            return
+        if keycode[1] == '7':
+            self.sideMenu.selectByIndex(6)
+            return
+        if keycode[1] == '8':
+            self.sideMenu.selectByIndex(7)
+            return
+        if keycode[1] == '9':
+            self.sideMenu.selectByIndex(8)
+            return
+        if keycode[1] == '0':
+            self.sideMenu.selectByIndex(9)
+            return
         return True
 
     def _keyboard_closed(self):
