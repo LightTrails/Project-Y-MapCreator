@@ -17,7 +17,6 @@ class Level():
             t = Tile(tile)
             self.tiles[t.coordinate] = t
         
-            
         for i in range(self.dimension[0]):
             for j in range(self.dimension[1]):
                 currentTile = self.tiles[(i, j)]
@@ -77,37 +76,48 @@ class Level():
             if(currentTile.state == 0):
                 continue
 
-            if(is_candidate(currentTile.state, currentTile.createUpList())):
-                actionCandidates.append((coordinate, 'up', currentTile.state))
+            coordIndex = coordinate[0] + self.dimension[0] * coordinate[1]
 
-            if(is_candidate(currentTile.state, currentTile.createDownList())):
-                actionCandidates.append((coordinate, 'down', currentTile.state))
+            # 0 = Up
+            if(is_candidate(currentTile.state, currentTile.createUpList(currentTile.state))):
+                actionCandidates.append((coordIndex, 0))
+            
+            # 1 = Right
+            if(is_candidate(currentTile.state, currentTile.createRightList(currentTile.state))):
+                actionCandidates.append((coordIndex, 1))
 
-            if(is_candidate(currentTile.state, currentTile.createRightList())):
-                actionCandidates.append((coordinate, 'right', currentTile.state))
-
-            if(is_candidate(currentTile.state, currentTile.createLeftList())):
-                actionCandidates.append((coordinate, 'left', currentTile.state))
-
+            # 2 = Down
+            if(is_candidate(currentTile.state, currentTile.createDownList(currentTile.state))):
+                actionCandidates.append((coordIndex, 2))
+            
+            # 3 = Left
+            if(is_candidate(currentTile.state, currentTile.createLeftList(currentTile.state))):
+                actionCandidates.append((coordIndex, 3))
+            
         return actionCandidates
 
     def applyAction(self, action):
-        currentTile = self.tiles[action[0]]
-        if(action[1] == 'up'):
-            for tile in currentTile.createUpList():
-                tile.state = action[2]
-                
-        if(action[1] == 'down'):
-            for tile in currentTile.createDownList():
-                tile.state = action[2]
 
-        if(action[1] == 'right'):
-            for tile in currentTile.createRightList():
-                tile.state = action[2]
+        coordinateIndex = action[0]
+        coordinate = ( coordinateIndex % self.dimension[0], int(coordinateIndex / int(self.dimension[0])))
 
-        if(action[1] == 'left'):
-            for tile in currentTile.createLeftList():
-                tile.state = action[2]
+        currentTile = self.tiles[coordinate]
+        state = currentTile.state
+        if(action[1] == 0):
+            for tile in currentTile.createUpList(state):
+                tile.state = state
+
+        if(action[1] == 1):
+            for tile in currentTile.createRightList(state):
+                tile.state = state
+
+        if(action[1] == 2):
+            for tile in currentTile.createDownList(state):
+                tile.state = state
+
+        if(action[1] == 3):
+            for tile in currentTile.createLeftList(state):
+                tile.state = state
 
     def __str__(self):
         return str(self.dimension)
@@ -115,10 +125,27 @@ class Level():
     def countScore(self):
         return sum([ 1 if self.tiles[tileCoordinates].state != self.tiles[tileCoordinates].endState else 0 for tileCoordinates in self.tiles ])
 
+    def setStateBasedOnHash(self, hash):
+        index = 0
+        
+        for j in range(self.dimension[1]):                
+            for i in range(self.dimension[0]):
+                self.tiles[(i,j)].state = int(hash[index])
+                index = index + 1
+
+    def getHash2(self):
+        hash = ''
+        
+        for j in range(self.dimension[1]):
+            for i in range(self.dimension[0]):
+                hash = hash + str(self.tiles[(i,j)].state)
+        
+        return hash
+
     def getHash(self):
         listToHash = []
-        for i in range(self.dimension[0]):
-            for j in range(self.dimension[1]):
+        for j in range(self.dimension[1]):
+            for i in range(self.dimension[0]):
                 listToHash.append((i, j, self.tiles[(i,j)].state))
 
         return hash(frozenset(listToHash))
@@ -161,41 +188,55 @@ class Tile():
         self.downWall = mapTile.downWallState
         self.rightWall = mapTile.rightWallState
 
-    def createUpList(self):
+    def createUpList(self, newState):
         result = []
-        nextTile = self.up if self.up != None and self.up.downWall != 0 else None
+        wall = self.up.downWall if self.up != None else None
+        nextTile = self.isNextTile(self.up, wall, newState)
         while nextTile != None:
             result.append(nextTile)
-            nextTile = nextTile.up if nextTile.up != None and nextTile.up.downWall != 0 else None
+            wall = nextTile.up.downWall if nextTile.up != None else None
+            nextTile = nextTile.isNextTile(nextTile.up, wall, newState)
 
         return result
 
-    def createDownList(self):
+    def createDownList(self, newState):
         result = []
-        nextTile = self.down if self.downWall != 0 else None
+        wall = self.downWall
+        nextTile = self.isNextTile(self.down, wall, newState)
         while nextTile != None:
-            result.append(nextTile)
-            nextTile = nextTile.down if nextTile.downWall != 0 else None
+            result.append(nextTile)            
+            nextTile = nextTile.isNextTile(nextTile.down, nextTile.downWall, newState)
         
         return result
 
-    def createLeftList(self):
+    def createLeftList(self, newState):
         result = []
-        nextTile = self.left if self.left != None and self.left.rightWall != 0 else None
+        wall = self.left.rightWall if self.left != None else None
+        nextTile = self.isNextTile(self.left, wall, newState)
         while nextTile != None:
             result.append(nextTile)
-            nextTile = nextTile.left if nextTile.left != None and nextTile.left.rightWall != 0 else None
+            wall = nextTile.left.rightWall if nextTile.left != None else None
+            nextTile = nextTile.isNextTile(nextTile.left, wall, newState)
 
         return result
 
-    def createRightList(self):
-        result = []
-        nextTile = self.right if self.rightWall != 0 else None
+    def createRightList(self, newState):
+        result = []        
+        nextTile = self.isNextTile(self.right, self.rightWall, newState)
         while nextTile != None:
             result.append(nextTile)
-            nextTile = nextTile.right if nextTile.rightWall != 0 else None
+            nextTile = nextTile.isNextTile(nextTile.right, nextTile.rightWall, newState)
 
         return result
+
+    def isNextTile(self, nextTile, wallState, newState):
+        if(nextTile == None):
+            return None
+        
+        if(wallState != None and wallState != newState):
+            return None
+
+        return nextTile
 
     def saveState(self):
         saveState = { 'Coordinate': {'x': self.coordinate[0], 'y': self.coordinate[1] } }

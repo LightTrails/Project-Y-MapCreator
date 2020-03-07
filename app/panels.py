@@ -8,6 +8,8 @@ from app.fileselector import FileSelector
 from app.solver import Solver
 from app.drawer import Drawer
 
+
+
 class Panels(BoxLayout):
 
     def __init__(self, layout, map, sideMenu, **kwargs):
@@ -16,7 +18,7 @@ class Panels(BoxLayout):
         self.sideMenu = sideMenu
         self.fileSelector = FileSelector(map, sideMenu)
         self.drawer = Drawer(map, sideMenu)
-        self.solver = Solver(map, sideMenu)
+        self.solver = Solver(map, self.fileSelector, sideMenu)
 
         self.map = map
 

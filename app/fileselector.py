@@ -18,6 +18,7 @@ class FileSelector(BoxLayout):
         self.map = map
         self.sideMenuItems = []
         self.selectedSideMenu = None
+        self.currentFilePath = None
 
         self.currentLevelNumber = - 1
 

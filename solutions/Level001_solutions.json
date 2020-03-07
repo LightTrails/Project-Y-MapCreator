@@ -1,0 +1,1 @@
+{"solutionList": [["000000100", 4, [[-1, null]], 0, 2], ["000000111", 2, [[0, [6, 1]]], 0, 1], ["001001111", 0, [[1, [8, 0]]], 1, 0]], "currentDepth": 2, "bestSolution": [0, 2], "nextWave": [], "stars": [2, 2, 2], "totalSolutions": 3, "solutionsByWave": [0, 0, 3]}
